@@ -1,0 +1,12 @@
+Note that version numbers associated with packages should be disiregarded
+(unless explicitly stated otherwise) when using pkg install as newer version may
+come out.
+
+
+PDF viewer (we use Zathura and not plain MuPDF as Zathura saves page position
+and also allowes the viewing of multiple pages at once (this is usefull when
+reading things like text books and it is also just our preference.):
+	Packages (we need to install two packages as Zathura relies on MuPDF but
+	the package to install Zathura does not install MuPDF):
+		zathura-0.4.3_2
+		zathura-pdf-mupdf-0.3.5_4
