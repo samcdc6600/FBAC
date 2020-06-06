@@ -10,3 +10,7 @@ reading things like text books and it is also just our preference.):
 	the package to install Zathura does not install MuPDF):
 		zathura-0.4.3_2
 		zathura-pdf-mupdf-0.3.5_4
+
+Development
+	Packages
+		doxygen
