@@ -1,20 +1,3 @@
 Commands used to configure the system or that should be placed in a
 configuration command should be put here. We will further organize these
 commands in the future.
-
-Mouse scroll speed (desktop). This is not ideal as it causes multipl page up /
-page down commands for each mouse wheel up / mouse wheel down action and thus
-doesn't provide "smooth" scrolling. However it is the best way we could find
-since FreeBSD doesn't seem to have evdev and thus a mouse scrolling property
-doesn't come up when using the xinput command
-
-# Copy imwheel from wherever we store it to the users home
-cp /somwhere/.imwheelrc ~/.imwheelrc
-# Use -b 45 to restric imwheel to just the scroll buttons (otherwise it turns
-# off the backwards and forwards buttons. Also note that there is an alternative
-# syntax as stated here: https://askubuntu.com/questions/421645/imwheel-destroys-back-forth-navigation-buttons-from-my-mouse
-# However even though our installed version of imwheel returned
-# imwheel 1.0.0pre12 by -=<Long Island Man>=- <jcatki@jonatkins.org>
-# The alternative syntax (-b "4 5") didn't work. But the presumably old syntax
-# did :)
-echo "exec --no-startup-id imwheel -b 45" >> .config/i3/config
