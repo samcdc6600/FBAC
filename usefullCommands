@@ -1,0 +1,25 @@
+Commands that may be usefull when we write the main configuration script should
+be put here.
+
+
+Input Device Related Commands:
+	List info about input devices:
+		xinput list
+		
+	List specific device properties (for example if sysmouse was an input
+	device listed by the above command):
+		xinput list-props "sysmouse"
+		
+	You can also use the peripheral number. For example if the number for
+	sysmouse was say 7, we could use the command:
+		xinput list-props 7
+		
+	To list buttons attached to a device (where 7 is the device number, it
+	can also be a device name is quots):
+		xinput get-button-map 7
+
+	To see which numbers are associated with which buttons (again the same
+	thing goes with the argument 7 as it does for the above command. On my
+	mouse 4 and 5 are scroll up and down respectively):
+		xinput test 7
+	

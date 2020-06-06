@@ -10,3 +10,13 @@ reading things like text books and it is also just our preference.):
 	the package to install Zathura does not install MuPDF):
 		zathura-0.4.3_2
 		zathura-pdf-mupdf-0.3.5_4
+
+
+Input devices.
+We install imwheel because as far as we can tell freebsd doesn't have evdev
+and we thus we cannot change the mouse scroll speed using xinput. Imwheel can
+cause multipl page up / page down actions for single scroll up scroll down
+actions done with a mouse wheel. This is not ideal but is better then having a
+really slow scrolling speed.
+	Packages:
+		imwheel

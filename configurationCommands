@@ -1,0 +1,13 @@
+Commands used to configure the system or that should be placed in a
+configuration command should be put here. We will further organize these
+commands in the future.
+
+Mouse scroll speed (desktop). This is not ideal as it causes multipl page up /
+page down commands for each mouse wheel up / mouse wheel down action and thus
+doesn't provide "smooth" scrolling. However it is the best way we could find
+since FreeBSD doesn't seem to have evdev and thus a mouse scrolling property
+doesn't come up when using the xinput command
+
+#copy imwheel from wherever we store it to the users home
+cp /somwhere/.imwheelrc ~/.imwheelrc
+echo "exec --no-startup-id imwheel" >> .config/i3/config
