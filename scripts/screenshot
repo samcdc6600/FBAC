@@ -17,7 +17,7 @@ EXIT_PROG="exit"
 
 # General vars.
 EXTENSION=".png"
-SAVE_FILE_PATH="${HOME}/Photos/screenShots"
+SAVE_FILE_PATH="${HOME}/Photos/screenshots"
 # Colour vars.
 NO_COLOR='\033[0m'
 RED='\033[0;31m'		# Indicates bad things :'(
