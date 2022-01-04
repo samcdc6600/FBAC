@@ -1,0 +1,217 @@
+#!/bin/sh
+
+################################################################################
+################################################################################
+###									     ###
+###	Program Name:			Timer 2000 AD			     ###
+###	File:				t2ad				     ###
+###	Author:				Samuel G Brown			     ###
+###	Date of Creation:		05/01/2022			     ###
+###	Last Modified:			05/01/2022			     ###
+###	Purpose:			To allow the user to set a timer/    ###
+###					timers which will sound an alarm     ###
+###					once is/they are up.		     ###
+###									     ###
+################################################################################
+################################################################################
+
+
+################################## PROG PATHS ##################################
+################################################################################
+ECHO_PROG="echo"		# We use the echo built into /bin/sh on FreeBSD.
+TR_PROG="/usr/bin/tr"
+SLEEP_PROG="/bin/sleep"
+EXPR_PROG="/bin/expr"
+MPV_PROG="/usr/local/bin/mpv"
+
+################################### PROG VARS ##################################
+################################################################################
+TRUE="1"
+FALSE="0"
+# Ret val vars.
+NON_INT_ARG_ERR="1"
+NO_ARG_ERR="2"
+# Print colors.
+NO_COLOR='\033[0m'
+RED='\033[0;31m'		# Indicates bad things :'(
+GREEN='\033[0;32m'		# Indicates all is well in the world :)
+# General vars.
+TICK_TIME="1"			# Time to sleep between timer updates.
+# Media/UI resources.
+ALERT_SOUND_ONE="${HOME}/.uiSoundResources/541560__sieuamthanh__chuong-6e.wav"
+ALERT_SOUND_TWO="${HOME}/.uiSoundResources/541605__erokia__msfxp9-49-one-\
+shot.wav"
+
+
+# Returns $1 with all non-numeric characters removed.
+eatNonNumericChars()
+{
+    $ECHO_PROG $1 | $TR_PROG -d "[:alpha:]"
+}
+
+
+testIfPosInt()
+{
+    alphaComp=$(eatNonNumericChars $1)
+    # The value after :- is substituted for alphaComp if nothing is assigned to
+    # it. The above line will not assign any value to alphaComp if $1 doesn't
+    # contain any numerical characters.
+    if [ ${alphaComp:-strEmpty} = $1 ] ||
+	   [ "${alphaComp:-strEmpty}m" = $1 ] # = and not -eq for string compare.
+    then
+	if [ $alphaComp -gt "-1" ] # AlphaComp is known to be an int at this point.
+	then			 # AlphaComp is an int.
+	    $ECHO_PROG $TRUE
+	else			# AlphaComp is an int but it is less then 0.
+	    $ECHO_PROG $FALSE
+	fi
+    else			# AlphaComp isn't an int.
+	$ECHO_PROG $FALSE
+    fi
+}
+
+
+# Returns the value of $1 in seconds. If $1 is followed by an "m" then we
+# multiply $1 by 60, otherwise we return $1. $1 should already be checked for
+# validity before calling this function.
+getTimerValInSecs()
+{
+    alphaComp=$(eatNonNumericChars $1)
+    if [ "${alphaComp:-strEmpty}m" = $1 ]
+    then
+	$ECHO_PROG -e $($EXPR_PROG $alphaComp \* 60)
+    else
+	$ECHO_PROG -e $alphaComp
+    fi
+}
+
+
+# ||||||||||||| THIS FUNCTION SHOULDN'T BE CALLED FROM A SUBSHELL! |||||||||||||
+# This func takes two args. The first is an error message and the second is an
+# exit status. 
+exitWithErr()
+{
+    $ECHO_PROG -e "${RED}Exiting due to error: ${1}${NO_COLOR}"
+    exit $2
+}
+
+
+handleRemainingCmdArgs()
+{
+    while [ $# -gt 0 ]		# $# expands to the number of command-line args.
+    do
+	if [ $(testIfPosInt $1) -eq $TRUE ]
+	then			# The first is an int.
+	    # The timers definition from main() is visible here.
+	    # Concat subsequent args with "|" as a delimiter.
+	    timers="${timers}|$(getTimerValInSecs $1)"
+	    #	    $ECHO_PROG -e "\rAdded: ${1} to timers\c" # \r for carriage return and \c to omit \n.
+	    shift 1				    # Reduced $#.
+	else
+	    exitWithErr "non integer or non positive integer argument (${1}) \
+supplied." $NON_INT_ARG_ERR
+	fi
+    done
+}
+
+
+playSound()
+{
+    $MPV_PROG --volume=94 -audio-display=no --profile=low-latency "${1}" > \
+	      /dev/null 2>&1 &
+}
+
+
+runTimers()
+{
+    timeLeft=$TRUE
+    updatedTimers=""
+    while [ $timeLeft -ne $FALSE ]
+    do
+	timeLeft=$FALSE		# Will be set to true if any timer is above 0.
+	# \033[K kills the line.
+	$ECHO_PROG -e "\r\033[K\c"	# Carrage return and suppress "\n".
+
+	FIRST_FOR_ITER=$TRUE	# We need to keep track of the first iteration of the for loop
+	IFS="|"			# Delimiter char.
+	for timer in $timers
+	do
+	    if [ $timer -gt 0 ]
+	    then
+		# There is still a timer greater then 0 so set timeLeft to true.
+		timeLeft=$TRUE 	    # Print timer (suppressing "\n").
+		$ECHO_PROG -e "${GREEN}$timer: ${NO_COLOR}\c"
+	    else
+		if [ $timer -eq 0 ]
+		then
+		    $ECHO_PROG -e "${RED}0: ${NO_COLOR}\c"
+		    playSound "${ALERT_SOUND_ONE}"
+		    playSound "${ALERT_SOUND_TWO}"
+		else		    
+		    $ECHO_PROG -e "${GREEN}0: ${NO_COLOR}\c"
+		fi
+	    fi
+
+	    if [ $timer -gt -1 ]
+	    then
+		# Print timer (suppressing "\n").
+		timer=$($EXPR_PROG $timer - 1)
+	    fi
+
+	    # We must temporarily change the value of IFS because we can't seem
+	    # to add "|" to any string (or at least display it with echo while
+	    # IFS is set to it.
+	    IFS=""
+	    if [ $FIRST_FOR_ITER -eq $TRUE ]
+	    then		# We don't want to add "|" on the first iteration!
+		updatedTimers="${timer}"
+		FIRST_FOR_ITER=$FALSE
+	    else
+		updatedTimers="${updatedTimers}|${timer}"
+	    fi
+	    IFS="|"
+	done
+
+	IFS=""
+	
+	timers=$updatedTimers
+	updatedTimers=""
+	$SLEEP_PROG $TICK_TIME
+	
+    done
+
+    $ECHO_PROG -e "\r\033[K\c"
+    # Make sure all counters are green upon exit.
+    IFS="|"
+    for timer in $timers
+    do
+	$ECHO_PROG -e "${GREEN}0: ${NO_COLOR}\c"
+    done
+    IFS=""			
+}
+
+
+main()
+{    
+    if [ $# -gt 0 ]
+    then		# We've been passed args.
+	if [ $(testIfPosInt $1) -eq $TRUE ]
+	then			# The first is an int.
+	    timers=$(getTimerValInSecs $1)	# Add first arg to timers var.
+	    shift		# Shft defaults to shift 1.
+
+	    handleRemainingCmdArgs $*
+	else			# The first isn't an int.
+	    exitWithErr "non integer or non positive integer argument (${1}) \
+supplied." "${TEST_IF_POS_INT_ERR_MSG}" $NON_INT_ARG_ERR
+	fi
+    else
+	exitWithErr "${0} requires at least one integer argument." $NO_ARG_ERR
+    fi
+
+    runTimers
+    $ECHO_PROG -e "${RED}\nTimes up!${NO_COLOR}"
+}
+
+
+main $*				# $* expands to all command-line arguments.
