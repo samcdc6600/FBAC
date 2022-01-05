@@ -140,15 +140,21 @@ runTimers()
 	    then
 		# There is still a timer greater then 0 so set timeLeft to true.
 		timeLeft=$TRUE 	    # Print timer (suppressing "\n").
-		$ECHO_PROG -e "${GREEN}$timer: ${NO_COLOR}\c"
+		outputTime="${timer}s"
+		if [ $timer -gt 60 ]
+		then
+		    outputTime="$($EXPR_PROG $timer \/ 60)m-$($EXPR_PROG $timer \% 60)s"
+		fi
+		
+		$ECHO_PROG -e "${GREEN}$outputTime: ${NO_COLOR}\c"
 	    else
 		if [ $timer -eq 0 ]
 		then
-		    $ECHO_PROG -e "${RED}0: ${NO_COLOR}\c"
+		    $ECHO_PROG -e "${RED}0s: ${NO_COLOR}\c"
 		    playSound "${ALERT_SOUND_ONE}"
 		    playSound "${ALERT_SOUND_TWO}"
 		else		    
-		    $ECHO_PROG -e "${GREEN}0: ${NO_COLOR}\c"
+		    $ECHO_PROG -e "${GREEN}0s: ${NO_COLOR}\c"
 		fi
 	    fi
 
@@ -185,7 +191,7 @@ runTimers()
     IFS="|"
     for timer in $timers
     do
-	$ECHO_PROG -e "${GREEN}0: ${NO_COLOR}\c"
+	$ECHO_PROG -e "${GREEN}0s: ${NO_COLOR}\c"
     done
     IFS=""			
 }
