@@ -146,7 +146,7 @@ detected..."
 		}
 	}
        	MAX_NUM_LENGTH = length(FILES_NUMBERS_SORTED[length(FILES_NUMBERS_SORTED)])
-	printf("File numbering range starts at: %*i (for file \"%*s\")\n",  \
+	printf("File numbering range starts at: %*i (with file \"%*s\")\n",  \
 MAX_NUM_LENGTH, FILES_NUMBERS_SORTED[1], MAX_NUM_LENGTH, FILES_SORTED[1])
     	for(i = 1; i < length(FILES_NUMBERS_SORTED); i++)
     	{
@@ -160,7 +160,7 @@ and \"%*s\"\n", MAX_NAME_LENGTH, FILES_SORTED[i], MAX_NAME_LENGTH, \
 FILES_SORTED[i + 1])
 		}
 	}
-	printf("File numbering range ends at:   %*i (for file \"%*s\")\n",  \
+	printf("File numbering range ends at:   %*i (with file \"%*s\")\n",  \
 MAX_NUM_LENGTH, FILES_NUMBERS_SORTED[length(FILES_NUMBERS_SORTED)], \
 MAX_NUM_LENGTH, FILES_SORTED[length(FILES_NUMBERS_SORTED)])
 
