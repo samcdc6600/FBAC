@@ -9,14 +9,34 @@
 # along the way). It is intended to be used as a simple sanity check.
 
 
+################################################################################
+#                        COMMANDS PATHS / SCRIPTS START                        #
+################################################################################
 LS_PROG="/bin/ls"
 READ_PROG="/usr/bin/read"
 AWK_PROG="/usr/bin/awk"
 RM_PROG="/bin/rm"
+ECHO_PROG="echo"
+EXIT_PROG="exit"
 ################################################################################
 #                               AWK PROGRAM START                              #
 ################################################################################
 AWK_SCRIPT=$(cat << 'EOF'
+function printDetectedEmptyFiles()
+{
+       DETECTED_EMPTY_FILE = "FALSE"
+       for(i in EMPTY_FILES)
+	{
+		if(DETECTED_EMPTY_FILE == "FALSE")
+		{
+			DETECTED_EMPTY_FILE = "TRUE"
+			print "Detected empty numbered file/s:"
+		}
+		print "\t\"" EMPTY_FILES[i] "\""
+	}
+}
+
+
 BEGIN {}
 
 
@@ -71,6 +91,7 @@ END {
 	{
 		print "Less than two files with a number in their name \
 detected..."
+		printDetectedEmptyFiles()
 		exit(-1)
 	}
 
@@ -158,19 +179,7 @@ MAX_NUM_LENGTH, FILES_SORTED[length(FILES_NUMBERS_SORTED)])
 
        }
 
-       DETECTED_EMPTY_FILE = "FALSE"
-       for(i in EMPTY_FILES)
-	{
-		if(DETECTED_EMPTY_FILE == "FALSE")
-		{
-			DETECTED_EMPTY_FILE = "TRUE"
-			print "Detected empty numbered file/s:"
-		}
-		if(EMPTY_FILES[i] != "fnnsc.tmp")
-		{
-			print "\t\"" EMPTY_FILES[i] "\""
-		}
-	}
+       printDetectedEmptyFiles()
 }
 EOF
 )
@@ -182,11 +191,166 @@ EOF
 ################################################################################
 #                                AWK PROGRAM END                               #
 ################################################################################
+################################################################################
+#                         COMMANDS PATHS / SCRIPTS END                         #
+################################################################################
 
 
+################################################################################
+#                               SHELL VARS START                               #
+################################################################################
+NO_COLOR='\033[0m'
+RED='\033[0;31m'		# Indicates bad things :'(
+GREEN='\033[0;32m'		# Indicates all is well in the world :)
 TMP_FILE="fnnsc.tmp"
+SUPPORTED_ARG_NUM="2"
+################################################################################
+#                                SHELL VARS END                                #
+################################################################################
 
 
-$LS_PROG -l ./ > $TMP_FILE
-$AWK_PROG "$AWK_SCRIPT" $TMP_FILE
-# $RM_PROG $TMP_FILE
+printValidArgs()
+{
+    $ECHO_PROG -e "$GREEN"$0"$NO_COLOR"" supports the following argument\s:"
+    $ECHO_PROG -e "\t-h/--help\t\tPrints this message."
+    $ECHO_PROG -e "\t-a/--all\t\tTells "$0" to include hidden files in it's \
+\n\t\t\t\tanalysis."
+    $ECHO_PROG -e "\tDIR\t\t\tWhere DIR is a valid and readable directory\n\
+\t\t\t\ttells "$0" to perform it's ananysis on the\n\t\t\t\tfiles in DIR \
+instead of the current working\n\t\t\t\tdirectory."
+}
+
+
+printHelp()
+{
+    $ECHO_PROG -e "$GREEN"$0"$NO_COLOR"" is designed to check files in a \
+directory for sequential naming.\nIt sorts all files that have a number in \
+their name in the searched directory by\nthe first number in their name. \
+Numbers are read as integers. It will print the\nname of the file with the \
+lowest number in it's name as well as the number with\nthe highest. It prints \
+any missing ranges between the numbering of files. It\nprints the names of any \
+files with a .part extension. Finally it will also\nprint any files with \
+numbers in their names that have a size of 0 bytes."
+    printValidArgs
+}
+
+
+main()
+{
+    if [ $# -gt "$SUPPORTED_ARG_NUM" ]
+    then
+	$ECHO_PROG -e "$RED""Error: ""$NO_COLOR""$GREEN"$0"$NO_COLOR"" supports\
+ a maximum number of"\
+		   "$SUPPORTED_ARG_NUM" "arguemnt/s at a time."
+	$EXIT_PROG 255
+    fi
+
+    ARGUMENTS=""
+    # Default directory argument.
+    DIR_ARG="./"
+    # Check if any argument was found.
+    FOUND_ARG="FALSE"
+    # Check if argument has already been found.
+    FOUND_DIR_ARG="FALES"
+    FOUND_ALL_ARG="FALSE"
+    INITIAL_ARG_NUMS=$#
+    while [ $# -gt 0 ]; do
+	# Check for a directory that is readable. If the argument is a directory
+	# but it is not valid it will cause an error to be printed below.
+	if [ -d "$1" ] && [ -r "$1" ]
+	then
+	   if [ "$FOUND_DIR_ARG" = "TRUE" ]
+	   then
+	       $ECHO_PROG -e "$RED""Error:""$NO_COLOR"" detected multiple\
+ occurrences of the directory argument argument. "
+	       $EXIT_PROG 254
+	   fi
+	   FOUND_DIR_ARG="TRUE"
+	   
+	   DIR_ARG="$1"
+	   shift 1
+	   continue
+	fi
+	   
+	case $1 in
+	    -a|--all)
+		ALL_ARG="-a"
+		# Each case statement should make sure that it is only hit once.
+		if [ "$FOUND_ALL_ARG" = "TRUE" ]
+		then
+		    $ECHO_PROG -e "$RED""Error:""$NO_COLOR"" detected multiple\
+ occurrences of the -a/--all argument. "
+		   $EXIT_PROG 253
+		fi
+		FOUND_ALL_ARG="TRUE"
+		
+		# Each case statement should contain the following two lines.
+		FOUND_ARG="TRUE"
+		shift 1
+		;;
+	esac
+	case $1 in
+	    -h|--help)
+		if [ "$INITIAL_ARG_NUMS" -gt 1 ]
+		then
+		    $ECHO_PROG -e "$RED""Error:""$NO_COLOR"" the -h/--help \
+argument must appear by itself."
+		    $EXIT_PROG 252
+		fi
+		printHelp
+		$EXIT_PROG 251
+	    ;;
+	esac
+
+	# If you need to add another command line option (that the AWK script
+	# knows about) that is for example called foo. You can use something
+	# like the following. "ARGUMENTS="$ARGUMENTS""FOO_ARG=TRUE "" adds
+	# "FOO_ARG=TRUE" to the list of arguments that will be passed to the AWK
+	# script. You should then be able to access it in the AWK script using
+	# then name "FOO_ARG". You also need to update "SUPPORTED_ARG_NUM".
+ # 	case $1 in
+ # 	    -f|foo)
+ # 		# Add argument to argument list.
+ # 		ARGUMENTS="$ARGUMENTS""FOO_ARG=TRUE "
+ # 		# Each case statement should make sure that it is only hit once.
+ # 		if [ "$FOUND_FOO_ARG" = "TRUE" ]
+ # 		then
+ # 		    $ECHO_PROG "Error: detected multiple occurrences of the\
+ # -f/--foo argument "
+ # 		    $EXIT_PROG 250
+ # 		fi
+ # 		FOUND_FOO_ARG="TRUE"
+		
+ # 		# Each case statement should contain the following two lines.
+ # 		FOUND_ARG="TRUE"
+ # 		shift 1
+ # 		;;
+ # 	esac
+
+	# If we didn't hit any of the cases in the case statement then the
+	# current argument being processed isn't valid.
+	if [ "$FOUND_ARG" = "FALSE" ]
+	then
+	    $ECHO_PROG -e "$RED""Error:""$NO_COLOR"" \"$1\"\nis not a valid \
+argument. If it is a directory it may not be a valid directory or\nit may not \
+be readable as the current user."
+	    printValidArgs
+	    $EXIT_PROG 249
+	fi
+	FOUND_ARG="FALSE"
+    done
+
+    # Get a listing of the working directory.
+    $LS_PROG -l $ALL_ARG "$DIR_ARG" > $TMP_FILE
+    if [ "$ARGUMENTS" != "" ]
+    then
+	$AWK_PROG -v "$ARGUMENTS" "$AWK_SCRIPT" $TMP_FILE
+    else
+	# If there were no CMD args call AWK script without any args.
+	$AWK_PROG "$AWK_SCRIPT" $TMP_FILE
+    fi
+    $RM_PROG $TMP_FILE
+}
+
+
+main $@				# Use $@ to pass CMD args to main.
