@@ -1,0 +1,172 @@
+#!/bin/sh
+
+
+# FILE NAME NUMBER SANITY CHECK
+# This is a short program to check that a list of files are numbered
+# sequentially. It only checks the first number in a files name. It will find
+# the file name with the lowest number and check that all the files after it
+# that contain a number are sequentially numbered (printing out missing ranges
+# along the way). It is intended to be used as a simple sanity check.
+
+
+LS_PROG="/bin/ls"
+READ_PROG="/usr/bin/read"
+AWK_PROG="/usr/bin/awk"
+RM_PROG="/bin/rm"
+################################################################################
+#                               AWK PROGRAM START                              #
+################################################################################
+AWK_SCRIPT=$(cat << 'EOF'
+# Will remove 
+function removeLeadingSpace(str)
+{
+	if(substr(str, 1, 1) == " ")
+	{
+		return substr(str, 2)
+	}
+	else
+	{
+		return str
+	}
+}
+
+
+BEGIN {}
+
+
+{
+	if(NF > 8)
+	{
+		NAME = ""
+
+		for(i = NF; i > 8; i--)
+		{
+			# Concatinate all the fields after 8 for the current
+			# record.
+			if(i == NF)
+			{
+				NAME = $i
+			}
+			else
+			{
+				NAME = $i " " NAME
+			}
+
+			# Note that match sets RSTART and RLENGTH.
+			if(match($i, /[0-9]+/))
+			{
+				# Record number that was in name (Note that this
+				# will only save the first number in the name.)
+				NAME_NUMBER = $i
+				NAME_NUMBER = substr(NAME_NUMBER,
+						     RSTART, RLENGTH)
+			}
+		}
+		if(NAME ~ /[0-9]+/)
+		{
+			# Add name to FILES array with index NR if NAME contains
+			# a number.
+			# sub(/^ +/, "", NAME)
+			sub(/\s+$/, "", NAME)
+			FILES[NR] = NAME
+			FILES_NUMBERS[NR] = NAME_NUMBER
+		}
+	}
+}
+
+
+END {
+	if(length(FILES) < 2)
+	{
+		print "Less than two files with a number in their name \
+detected..."
+		exit(-1)
+	}
+
+        # Copy arrays into new arrays with sequential indexes.
+        SORTED_INDEX = 1
+        FILES_SORTED[1] = ""
+	FILES_NUMBERS_SORTED[1] = ""
+	for(i in FILES)
+        {
+	    FILES_SORTED[SORTED_INDEX] = FILES[i]
+	    FILES_NUMBERS_SORTED[SORTED_INDEX] = FILES_NUMBERS[i]
+	    SORTED_INDEX += 1
+	}
+
+	# Here we use the most lovely and fast bubble sort!
+        SWAPPED = "TRUE"
+	for(i = 1; i < length(FILES_NUMBERS_SORTED); i++)
+	{
+	    if(SWAPPED == "FALSE")
+	    {
+		# Break out of the loop if we have finished sorting.
+		break
+	    }
+	    SWAPPED = "FALSE"
+
+            for(j = 1; j < length(FILES_NUMBERS_SORTED); j++)
+	    {
+		# If either argument is a string the other will be cast to a
+		# string before the comparison. So we add "+ 0" to both.
+            	if ((FILES_NUMBERS_SORTED[j] + 0) > \
+(FILES_NUMBERS_SORTED[j+1] + 0))
+		{
+		   SWAPPED = "TRUE" # Note that we did some sorting.
+                   # Swap elements
+                   temp = FILES_NUMBERS_SORTED[j]
+                   FILES_NUMBERS_SORTED[j] = FILES_NUMBERS_SORTED[j+1]
+                   FILES_NUMBERS_SORTED[j+1] = temp
+                   temp = FILES_SORTED[j]
+                   FILES_SORTED[j] = FILES_SORTED[j+1]
+                   FILES_SORTED[j+1] = temp
+            	}
+            }
+    	}
+
+	# Get length of longest file name and number (used to format output.)
+	MAX_NAME_LENGTH = 0
+	for(i = 1; i <= length(FILES_SORTED); i++)
+	{
+		if(MAX_NAME_LENGTH < length(FILES_SORTED[i]))
+		{
+			MAX_NAME_LENGTH = length(FILES_SORTED[i])
+		}
+	}
+       	MAX_NUM_LENGTH = length(FILES_NUMBERS_SORTED[length(FILES_NUMBERS_SORTED)])
+	printf("File numbering range starts at: %*i (for file \"%*s\")\n",  \
+MAX_NUM_LENGTH, FILES_NUMBERS_SORTED[1], MAX_NUM_LENGTH, FILES_SORTED[1])
+    	for(i = 1; i < length(FILES_NUMBERS_SORTED); ++i)
+    	{
+		if(FILES_NUMBERS_SORTED[i] + 1 != \
+FILES_NUMBERS_SORTED[i + 1] + 0)
+		{
+			printf("Gap in file numbering between files \"%*s\" \
+and \"%*s\"\n", MAX_NAME_LENGTH, FILES_SORTED[i], MAX_NAME_LENGTH, \
+FILES_SORTED[i + 1])
+		}
+	}
+	printf("File numbering range starts at: %*i (for file \"%*s\")\n",  \
+MAX_NUM_LENGTH, FILES_NUMBERS_SORTED[length(FILES_NUMBERS_SORTED)], \
+MAX_NUM_LENGTH, FILES_SORTED[length(FILES_NUMBERS_SORTED)])
+}
+EOF
+)
+
+IFS='' # set the delimiter to null character
+$READ_PROG var << EOF
+$AWK_SCRIPT
+EOF
+################################################################################
+#                                AWK PROGRAM END                               #
+################################################################################
+
+
+TMP_FILE="fnnsc.tmp"
+
+
+$LS_PROG -l ./ > $TMP_FILE
+
+$AWK_PROG "$AWK_SCRIPT" $TMP_FILE
+
+$RM_PROG $TMP_FILE
