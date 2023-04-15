@@ -154,7 +154,7 @@ MAX_NUM_LENGTH, FILES_NUMBERS_SORTED[1], MAX_NUM_LENGTH, FILES_SORTED[1])
 FILES_NUMBERS_SORTED[i + 1] + 0 && FILES_NUMBERS_SORTED[i] != \
 FILES_NUMBERS_SORTED[i + 1] + 0)
 		{
-			# Numbers are not in sequence or the same.
+			# Numbers are not in sequence or not the same.
 			printf("\tGap in file numbering between files \"%*s\" \
 and \"%*s\"\n", MAX_NAME_LENGTH, FILES_SORTED[i], MAX_NAME_LENGTH, \
 FILES_SORTED[i + 1])
