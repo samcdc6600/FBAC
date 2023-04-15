@@ -17,20 +17,6 @@ RM_PROG="/bin/rm"
 #                               AWK PROGRAM START                              #
 ################################################################################
 AWK_SCRIPT=$(cat << 'EOF'
-# Will remove 
-function removeLeadingSpace(str)
-{
-	if(substr(str, 1, 1) == " ")
-	{
-		return substr(str, 2)
-	}
-	else
-	{
-		return str
-	}
-}
-
-
 BEGIN {}
 
 
