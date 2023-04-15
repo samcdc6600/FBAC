@@ -56,6 +56,11 @@ BEGIN {}
 			sub(/\s+$/, "", NAME)
 			FILES[NR] = NAME
 			FILES_NUMBERS[NR] = NAME_NUMBER
+
+			if($5 == 0)
+			{
+				EMPTY_FILES[NR] = NAME
+			}
 		}
 	}
 }
@@ -146,12 +151,26 @@ MAX_NUM_LENGTH, FILES_SORTED[length(FILES_NUMBERS_SORTED)])
 			if(DETECTED_PART_FILE == "FALSE")
 			{
 				DETECTED_PART_FILE = "TRUE"
-				print "Detected part file/s:"
+				print "Detected numbered part file/s:"
 			}
 			print "\t\"" FILES_SORTED[i] "\""
 		}
 
        }
+
+       DETECTED_EMPTY_FILE = "FALSE"
+       for(i in EMPTY_FILES)
+	{
+		if(DETECTED_EMPTY_FILE == "FALSE")
+		{
+			DETECTED_EMPTY_FILE = "TRUE"
+			print "Detected empty numbered file/s:"
+		}
+		if(EMPTY_FILES[i] != "fnnsc.tmp")
+		{
+			print "\t\"" EMPTY_FILES[i] "\""
+		}
+	}
 }
 EOF
 )
@@ -170,4 +189,4 @@ TMP_FILE="fnnsc.tmp"
 
 $LS_PROG -l ./ > $TMP_FILE
 $AWK_PROG "$AWK_SCRIPT" $TMP_FILE
-$RM_PROG $TMP_FILE
+# $RM_PROG $TMP_FILE
