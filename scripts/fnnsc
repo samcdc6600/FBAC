@@ -303,11 +303,11 @@ argument must appear by itself."
 	esac
 
 	# If you need to add another command line option (that the AWK script
-	# knows about) that is for example called foo. You can use something
+	# should know) that is for example called foo. You can use something
 	# like the following. "ARGUMENTS="$ARGUMENTS""FOO_ARG=TRUE "" adds
 	# "FOO_ARG=TRUE" to the list of arguments that will be passed to the AWK
 	# script. You should then be able to access it in the AWK script using
-	# then name "FOO_ARG". You also need to update "SUPPORTED_ARG_NUM".
+	# the name "FOO_ARG". You also need to update "SUPPORTED_ARG_NUM".
  # 	case $1 in
  # 	    -f|foo)
  # 		# Add argument to argument list.
