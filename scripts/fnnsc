@@ -152,7 +152,5 @@ TMP_FILE="fnnsc.tmp"
 
 
 $LS_PROG -l ./ > $TMP_FILE
-
 $AWK_PROG "$AWK_SCRIPT" $TMP_FILE
-
 $RM_PROG $TMP_FILE
