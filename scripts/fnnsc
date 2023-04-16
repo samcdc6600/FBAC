@@ -346,7 +346,7 @@ be readable as the current user."
     then
 	$AWK_PROG -v "$ARGUMENTS" "$AWK_SCRIPT" $TMP_FILE
     else
-	# If there were no CMD args call AWK script without any args.
+	# If there were no CMD args, call AWK script without any args.
 	$AWK_PROG "$AWK_SCRIPT" $TMP_FILE
     fi
     $RM_PROG $TMP_FILE
