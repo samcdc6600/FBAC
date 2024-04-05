@@ -77,7 +77,7 @@ Exiting...${NO_COLOR}"
     $SCROT_PROG $FILE_NAME
     if [ $? ]		# Check return value.
     then
-	$ECHO_PROG -e "${GREEN}Screenshot taken!.${NO_COLOR}"
+	$ECHO_PROG -e "${GREEN}Screenshot taken with path (\"`pwd`/${FILE_NAME}\")!${NO_COLOR}"
     else
 	$ECHO_PROG -e "${GREEN}Error: couldn't take screenshot!.${NO_COLOR}"
 	$EXIT_PROG		# Abort script!
